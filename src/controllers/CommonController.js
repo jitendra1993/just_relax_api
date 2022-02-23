@@ -6,7 +6,7 @@ import { type } from 'os';
 import {VendorController} from '../controllers/VendorController.js'
 import moment from 'moment';
 import UserModel from '../models/User.js';
-import BannerModel from '../models/banner.js';
+import BannerModel from '../models/Banner.js';
 import LoyaltyPointModel from '../models/LoyaltyPoint.js';
 import SettingModel from '../models/VendorSetting.js';
 import { decode } from 'html-entities';
