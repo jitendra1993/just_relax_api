@@ -2,7 +2,7 @@ let messages
 if(process.env.NODE_ENV === 'production'){
      messages = {
         CURRENCY : '£',
-        HOST:'https://just-relax.com/dev',
+        HOST:'https://justrelax.co.in/dev',
         CATEGORY_IMAGE_URL : '/uploads/files/',
         LOGO_IMAGE_URL : '/uploads/vendor_logo/',
         DEAFULT_CATEGORY_IMAGE_URL : '/uploads/files/default.png',
@@ -10,7 +10,7 @@ if(process.env.NODE_ENV === 'production'){
 }else{
      messages = {
         CURRENCY : '£',
-        HOST:'http://localhost/just-relax/dev',
+        HOST:'http://localhost/just-relax',
         CATEGORY_IMAGE_URL : '/uploads/files/',
         LOGO_IMAGE_URL : '/uploads/vendor_logo/',
         DEAFULT_CATEGORY_IMAGE_URL : '/uploads/files/default.png',
