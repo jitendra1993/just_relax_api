@@ -17,6 +17,8 @@ export class VendorController {
     vendors
     platform
     description
+    visit_date
+    visit_time
 
     static async list(req, res, next) {
         const postcode = (typeof req.body.postcode != "undefined" && req.body.postcode != null) ? (req.body.postcode).replace(/ /g, '').substring(0, 4): '';
@@ -736,10 +738,12 @@ export class VendorController {
             VendorController.description = (typeof req.body.description != "undefined" && req.body.description != null) ? req.body.description : ''
             VendorController.platform = (typeof req.body.platform != "undefined" && req.body.platform != null) ? req.body.platform : ''
             VendorController.vendors = (typeof req.body.vendors != "undefined" && req.body.vendors != null) ? req.body.vendors : []
+            VendorController.visit_date = (typeof req.body.visit_date != "undefined" && req.body.visit_date != null) ? new Date(req.body.visit_date).getTime() : 0
+            VendorController.visit_time = (typeof req.body.visit_time != "undefined" && req.body.visit_time != null) ? req.body.visit_time : '00:00:00'
             
             const address_detail = await VendorController.getAddresForOrder()	
             const serviceObj = await VendorController.getSerivce()	
-            
+
             const hash =  Utils.randomAsciiString(32);
             var date = new Date();
             var today = `${date.getFullYear()}${date.getMonth()}${date.getDate()}`
@@ -761,6 +765,8 @@ export class VendorController {
                 platform: VendorController.platform,
                 location : {type : "Point", coordinates :[28.412894,77.311299]},
                 vendors: VendorController.vendors,
+                visit_date: VendorController.visit_date,
+                visit_time: VendorController.visit_time,
                 payment_remark: '',
                 payment_status: 0,
                 status: 1,
@@ -771,11 +777,13 @@ export class VendorController {
                 added_date_iso: new Date(),
                 updated_date_iso: new Date(),
             };
-            
-            //var saveRequest =  await new OrderModel(data).save();
+
+            var saveRequest =  await new OrderModel(data).save();
             //var objectId = saveRequest._id
             let orderDetail = await VendorController.orderList(VendorController.userId,order_id,VendorController.vendors);
             await NodeMailer.OrderMail(orderDetail,VendorController.vendors)
+            const sendData = {order_id:order_id}
+            res.json(new ApiResponse(sendData));
         } catch (e) {
             console.log('err ' + e)
             next(e);
@@ -783,7 +791,7 @@ export class VendorController {
     }
 
     static async  orderList(userId,orderId,vendors){
-        var orderId = 'Q7A2022123MQUMUT'
+        //var orderId = 'IKT2022125BV5Q7B'
  
         var data = {}
         let orderDetail = await VendorController.orderDetail(orderId)

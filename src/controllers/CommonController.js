@@ -10,6 +10,7 @@ import BannerModel from '../models/Banner.js';
 import LoyaltyPointModel from '../models/LoyaltyPoint.js';
 import SettingModel from '../models/VendorSetting.js';
 import { decode } from 'html-entities';
+import OrderModel from '../models/Order.js';
 
 export class CommonController {
 
@@ -167,7 +168,7 @@ export class CommonController {
                                 }
                             }
                         },
-                        { "$project": { _id: 0, "vendor_name": 1, "vendor_phone": 1, "contact_name": 1, "contact_phone": 1, "contact_email": 1, "country": 1, "state": 1, "city": 1, "address": 1, "pincode": 1, "about": 1, "site_url": 1, logo: 1, social_media: 1, favicon: 1 } }
+                        { "$project": { _id: 0, "vendor_name": 1, "vendor_phone": 1, "contact_name": 1, "contact_phone": 1, "contact_email": 1, "country": 1, "state": 1, "city": 1, "address": 1, "pincode": 1, "about": 1, "site_url": 1, logo: 1, social_media: 1, favicon: 1,mail_logo_url:1 } }
                     ],
                     as: 'vendor_info'
                 }
@@ -294,7 +295,6 @@ export class CommonController {
         return null
 	}
 
-
     static async adminbanner(req, res, next) {
         try {
             const condition ={status: 1}
@@ -322,8 +322,6 @@ export class CommonController {
         }
     }
 
-
-
     static async checkUserExist(id){
 
         const condition ={status: 1,hash: id}
@@ -331,6 +329,114 @@ export class CommonController {
         return await UserModel.findOne(condition,projection)
     }
 
+    static async history(req, res, next){
+        try {
+            var totalRecord = 0
+            let userId = (typeof req.query.userId != "undefined" && req.query.userId != null) ? req.query.userId : ''
+            let start = (typeof req.query.start != "undefined" && req.query.start != null) ? Number(req.query.start) : 0
+            let last = (typeof req.query.last != "undefined" && req.query.last != null) ? Number(req.query.last) : 20
+            let textSearch = (typeof req.query.textSearch != "undefined" && req.query.textSearch != null) ? req.query.textSearch: ''
+            let startDate = (typeof req.query.startDate != "undefined" && req.query.startDate != null) ? `${req.query.startDate}`: ''
+            let endDate = (typeof req.query.endDate != "undefined" && req.query.endDate != null) ? `${req.query.endDate}`: ''
+            let year = (typeof req.query.year != "undefined" && req.query.year != null) ? req.query.year: ''
+
+            let queryObj = {
+                _id: {$ne: null},
+                user_id: userId
+            };
+            
+            if (startDate != ''  && endDate != '')  {
+                let startDateTime = parseInt((new Date(startDate+' 00:00:00').getTime()).toFixed(0))
+                let endDateTime = parseInt((new Date(endDate+' 23:50:59').getTime()).toFixed(0))
+
+                queryObj['added_date_timestamp'] = { $gte: startDateTime,$lte: endDateTime }
+                
+              
+            }else if (startDate != ''  && endDate == '')  {
+                let startDateTime = parseInt((new Date(startDate+' 00:00:00').getTime()).toFixed(0))
+                queryObj['added_date_timestamp'] = { $gte: startDateTime }
+
+            }else if (startDate == ''  && endDate != '')  {
+                let endDateTime = parseInt((new Date(endDate+' 23:50:59').getTime()).toFixed(0))
+                queryObj['added_date_timestamp'] = { $lte: endDateTime }
+
+            }else if(year!= '')  {
+                var isoDateStart = new Date(`${year}-01-01 00:00:00`).getTime() 
+                var isoDateEnd= new Date(`${year}-12-31 23:59:59`).getTime() 
+                
+                queryObj['added_date_timestamp'] = { $gte: isoDateStart,$lte: isoDateEnd }
+            }
+        
+            if (textSearch != '')  {
+                queryObj["$or"] = [
+                        {order_id:{$regex: textSearch, $options: 'i'}},
+                        {description:{$regex: textSearch, $options: 'i'}},
+                        {payment_remark:{$regex: textSearch, $options: 'i'}},
+                                ]
+            }
+          
+            const orderDetail = await OrderModel.find(queryObj).skip(start).limit(last).sort({_id:-1})
+            totalRecord = await OrderModel.countDocuments(queryObj)
+            if(orderDetail!=null && typeof orderDetail!='undefined' && orderDetail.length>0) {
+                var rr= orderDetail.map((element,index)=>{
+                    element = element.toJSON()
+                    var status = Number(element['status'])
+                    var payment_type = Number(element['payment_type'])
+                    var payment_status = Number(element['payment_status'])
+                    var text_order_status =''
+					var pt ='Pending';
+                    if(status==1)
+                    {
+                        text_order_status ='Placed';
+                    }else if(status==2)
+                    {
+                        text_order_status ='Placed';
+                    }else if(status==3)
+                    {
+                        text_order_status ='Accept';
+                    }else if(status==4)
+                    {
+                        text_order_status ='Rejected';
+                    }else if(status==5)
+                    {
+                        text_order_status ='Pending';
+                    }
+
+                    if(payment_type==2){
+                        if(payment_status==1)
+                        {
+                            pt ='Success'
+                        }else if(payment_status==2)
+                        {
+                            pt ='Pending'
+                        }else if(payment_status==3)
+                        {
+                            pt ='Cancel'
+                        }else if(payment_status==4)
+                        {
+                            pt ='Decline'
+                        }
+                    }
+                    const newPropsObj = {
+                        text_order_status:text_order_status,
+                        text_payment_status:pt,
+                      };
+                    return Object.assign(element, newPropsObj);
+                    
+                    
+                })
+                //console.log( JSON.stringify( rr, undefined, 2 ) ); 
+                var data ={totalRecord:totalRecord,result:rr}
+                res.json(new ApiResponse(data));
+            }else{
+                res.json(new ApiResponse({},200,'No any order found.'));
+            }
+        }catch (e) {
+            console.log('err ' + e)
+            next(e);
+        }
+    }
+    
     
 
 

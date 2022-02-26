@@ -19,6 +19,7 @@ class CommonRouter {
         this.router.get('/postcode-verification', CommonValidators.postcode(), GlobalMiddleWare.checkError, CommonController.checkPostcode);
         this.router.get('/admin/setting',CommonController.adminSetting);
         this.router.get('/admin/banner',CommonController.adminbanner);
+        this.router.get('/history',GlobalMiddleWare.authenticate,CommonValidators.history(), GlobalMiddleWare.checkError, CommonController.history);
         //this.router.get('/:id/items/:type', RestaurantValidators.restaurantId(), GlobalMiddleWare.checkError, RestaurantController.restaurantItems);
     }
 

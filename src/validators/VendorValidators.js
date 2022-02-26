@@ -55,6 +55,8 @@ export class VendorValidators {
             body('user_id', 'User id is Required').isLength({min: 4}),
             body('address_id', 'Address id is Required').isLength({min: 4}),
             body('description', 'Description id is Required').isLength({min: 4}),
+            body('visit_date', 'Visiting date id is Required'),
+            body('visit_time', 'Visit time id is Required'),
             body('service_id').custom((id, {req}) => {
                 return VendorCategoryModel.findOne({id: id}).then((info) => {
                     if (info) {
