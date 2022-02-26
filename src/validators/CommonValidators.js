@@ -20,6 +20,14 @@ export default class CommonValidators {
 			
     }
 
+    static history() {
+		return [
+			query('userId', 'User id is Required').isLength({min: 3}),
+			query('start', 'Page no. is Required').isLength({min: 1}),
+			query('last', 'Total recored per page is Required').isLength({min: 1})
+           ];
+    }
+
 }
 
 
